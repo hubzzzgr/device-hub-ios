@@ -8,7 +8,10 @@ struct RemotePairingImportTests {
     @Test("XML and binary plists preserve credentials and signed identifier casing")
     func plistFormats() async throws {
         for format in [PropertyListSerialization.PropertyListFormat.xml, .binary] {
-            let imported = try RemotePairingImport(data: data(format: format))
+            let imported = try RemotePairingImport(
+                data: data(format: format),
+                now: Date(timeIntervalSince1970: 1_750_000_000)
+            )
             #expect(imported.controller.wireIdentifier == "aabbccdd-0000-4000-8000-000000000001")
             #expect(imported.target.deviceID.rawValue == "synthetic-device")
             let driver = MemoryKeychainDriver()
