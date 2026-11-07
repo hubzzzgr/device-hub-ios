@@ -303,6 +303,9 @@ actor PersistenceProbe {
             forgetTarget: { deviceID in
                 await self.forget(deviceID: deviceID)
             },
+            importRemotePairing: { _ in
+                throw RemotePairingImportError.invalidPlist
+            },
             loadOrCreateControllerIdentity: {
                 self.controller
             },
