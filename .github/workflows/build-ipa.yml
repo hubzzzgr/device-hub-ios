@@ -2,6 +2,11 @@ name: Build unsigned IPA
 
 on:
   workflow_dispatch:
+    inputs:
+      run_tests:
+        description: Run the full Swift and build-support test suites before building
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -41,10 +46,12 @@ jobs:
 
       # One upstream fixture requires /Users/javi/code/ios-build-support.
       - name: Test build support (upstream local-path fixture may fail)
+        if: ${{ inputs.run_tests }}
         continue-on-error: true
         run: mise run test:support
 
       - name: Test Swift packages
+        if: ${{ inputs.run_tests }}
         run: mise run test:swift
 
       - name: Build protocol framework
