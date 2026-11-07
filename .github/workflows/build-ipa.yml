@@ -1,0 +1,71 @@
+name: Build unsigned IPA
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: xcode-27
+    timeout-minutes: 90
+    env:
+      CODE_SIGNING_ALLOWED: 'NO'
+      SHARED_IOS_SUPPORT_DIR: ${{ github.workspace }}/BuildSupport/CI
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Xcode and SDK requirements
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          python3 - <<'PY'
+          import re
+          import subprocess
+          for command in (["xcodebuild", "-version"], ["xcrun", "--sdk", "iphoneos", "--show-sdk-version"]):
+              output = subprocess.check_output(command, text=True)
+              match = re.search(r"(\d+)\.(\d+)", output)
+              if not match or tuple(map(int, match.groups())) < (27, 1):
+                  raise SystemExit("This build requires Xcode 27.1+ and the iOS 27.1+ SDK. Select a compatible runner.")
+          PY
+
+      - uses: jdx/mise-action@v2
+        with:
+          install: false
+
+      - name: Install build tools
+        run: mise install python rust ripgrep xcodegen
+
+      - name: Build protocol framework
+        run: mise run protocol:build
+
+      - name: Archive unsigned app
+        run: mise run archive
+
+      - name: Package IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          app=build/DeviceHub.xcarchive/Products/Applications/DeviceHub.app
+          test -d "$app"
+          test -s "$app/DeviceHub"
+          /usr/bin/plutil -lint "$app/Info.plist"
+          mkdir -p build/ipa/Payload
+          /usr/bin/ditto "$app" build/ipa/Payload/DeviceHub.app
+          cd build/ipa
+          /usr/bin/ditto -c -k --keepParent Payload DeviceHub-unsigned.ipa
+          unzip -t DeviceHub-unsigned.ipa
+          shasum -a 256 DeviceHub-unsigned.ipa > DeviceHub-unsigned.ipa.sha256
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: DeviceHub-unsigned-${{ github.sha }}
+          path: |
+            build/ipa/DeviceHub-unsigned.ipa
+            build/ipa/DeviceHub-unsigned.ipa.sha256
+          if-no-files-found: error
+          retention-days: 14
