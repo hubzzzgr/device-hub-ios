@@ -19,6 +19,8 @@ public struct PairingPersistenceClient: Sendable {
         ) async throws -> TargetPairingRecord
     public var forgetTarget:
         @Sendable (_ deviceID: DeviceID) async throws -> Bool
+    public var importRemotePairing:
+        @Sendable (_ imported: RemotePairingImport) async throws -> Void
     public var loadOrCreateControllerIdentity:
         @Sendable () async throws -> ControllerIdentity
     public var pairingRecords:
@@ -56,6 +58,9 @@ extension PairingPersistenceClient: DependencyKey {
             },
             forgetTarget: { deviceID in
                 try await store.forgetTarget(deviceID)
+            },
+            importRemotePairing: { imported in
+                try await store.importRemotePairing(imported)
             },
             loadOrCreateControllerIdentity: {
                 try await store.loadOrCreateControllerIdentity()

@@ -1,4 +1,3 @@
-import DeviceHubLive
 import DeviceHubPersistence
 import Foundation
 import SwiftUI
@@ -6,6 +5,8 @@ import UniformTypeIdentifiers
 
 /// File access stays in the app shell; pairing secrets never enter feature state.
 struct DeviceHubPairingImportView: View {
+    let pairingPersistence: PairingPersistenceClient
+
     @Environment(\.dismiss) private var dismiss
     @State private var showsFilePicker = false
     @State private var pendingImport: RemotePairingImport?
@@ -85,13 +86,7 @@ struct DeviceHubPairingImportView: View {
                 self.pendingImport = nil
             }
             do {
-                let service = try DeviceHubPairingPersistenceProvisioning.keychainService()
-                let store = KeychainPairingStore(
-                    driver: SecurityKeychainDriver(),
-                    descriptor: .pairingVault(service: service),
-                    generateControllerIdentity: SystemControllerIdentityGenerator.generate
-                )
-                try await store.importRemotePairing(pendingImport)
+                try await pairingPersistence.importRemotePairing(pendingImport)
                 imported = true
                 message = "Pairing imported. Close and reopen Device Hub to discover the device using this pairing."
             } catch {
@@ -110,9 +105,9 @@ struct DeviceHubPairingImportView: View {
 }
 
 #Preview("Import Pairing · iPhone", traits: .fixedLayout(width: 393, height: 852)) {
-    DeviceHubPairingImportView()
+    DeviceHubPairingImportView(pairingPersistence: .testValue)
 }
 
 #Preview("Import Pairing · iPad", traits: .fixedLayout(width: 1024, height: 1366)) {
-    DeviceHubPairingImportView()
+    DeviceHubPairingImportView(pairingPersistence: .testValue)
 }

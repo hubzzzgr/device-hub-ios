@@ -88,7 +88,8 @@ private struct DeviceHubLiveBootstrapView: View {
         case needsAdvertisedName
         case ready(
             StoreOf<RemoteSessionFeature>,
-            DeviceHubDiagnosticsRuntime
+            DeviceHubDiagnosticsRuntime,
+            PairingPersistenceClient
         )
         case unavailable
     }
@@ -108,10 +109,11 @@ private struct DeviceHubLiveBootstrapView: View {
                     save: saveAdvertisedName
                 )
 
-            case let .ready(store, diagnostics):
+            case let .ready(store, diagnostics, pairingPersistence):
                 DeviceHubLiveContentView(
                     store: store,
-                    diagnostics: diagnostics
+                    diagnostics: diagnostics,
+                    pairingPersistence: pairingPersistence
                 )
 
             case .unavailable:
@@ -224,7 +226,8 @@ private struct DeviceHubLiveBootstrapView: View {
             DeviceHubBootstrapTrace.emit("client_created")
             startupState = .ready(
                 DeviceHubAppComposition.makeStore(deviceHub: deviceHub),
-                runtime
+                runtime,
+                pairingPersistence
             )
             DeviceHubBootstrapTrace.emit("bootstrap_ready")
         } catch {
@@ -308,13 +311,16 @@ struct DeviceHubLiveContentView: View {
 
     let store: StoreOf<RemoteSessionFeature>
     let diagnostics: DeviceHubDiagnosticsRuntime?
+    let pairingPersistence: PairingPersistenceClient
 
     init(
         store: StoreOf<RemoteSessionFeature>,
-        diagnostics: DeviceHubDiagnosticsRuntime?
+        diagnostics: DeviceHubDiagnosticsRuntime?,
+        pairingPersistence: PairingPersistenceClient = .testValue
     ) {
         self.store = store
         self.diagnostics = diagnostics
+        self.pairingPersistence = pairingPersistence
         _remoteDiagnostics = State(
             initialValue: DeviceHubRemoteDiagnosticsSettings(
                 destinationHost:
@@ -338,7 +344,7 @@ struct DeviceHubLiveContentView: View {
             }
         )
         .sheet(isPresented: $isPairingImportPresented) {
-            DeviceHubPairingImportView()
+            DeviceHubPairingImportView(pairingPersistence: pairingPersistence)
         }
         .task(id: scenePhase) {
             guard let diagnostics else { return }
