@@ -19,6 +19,7 @@ public struct DeviceHubView: View {
 
     private let aboutContent: DeviceHubAboutContent
     private let remoteDiagnostics: DeviceHubRemoteDiagnosticsSettings
+    private var importPairingRequested: (() -> Void)?
     private let startsFeatureTask: Bool
 
     @MainActor
@@ -40,7 +41,8 @@ public struct DeviceHubView: View {
     @MainActor
     public init(
         store: StoreOf<RemoteSessionFeature>,
-        remoteDiagnostics: DeviceHubRemoteDiagnosticsSettings
+        remoteDiagnostics: DeviceHubRemoteDiagnosticsSettings,
+        importPairingRequested: (() -> Void)? = nil
     ) {
         self.init(
             store: store,
@@ -48,6 +50,7 @@ public struct DeviceHubView: View {
             remoteDiagnostics: remoteDiagnostics,
             startsFeatureTask: true
         )
+        self.importPairingRequested = importPairingRequested
     }
 
     /// Creates the interface with explicitly supplied attribution content.
@@ -147,7 +150,8 @@ public struct DeviceHubView: View {
             isKeyboardPresented: $isKeyboardPresented,
             aboutButtonTapped: aboutButtonTapped,
             detailsButtonTapped: selectedDetailsButtonTapped,
-            pairButtonTapped: pairButtonTapped
+            pairButtonTapped: pairButtonTapped,
+            importPairingRequested: importPairingRequested
         )
     }
 

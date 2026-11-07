@@ -78,18 +78,26 @@ public struct ControllerIdentity: Codable, Equatable, Sendable {
     public let identifier: ControllerIdentifier
     public let longTermSecretKey: Ed25519SecretKey
     public let udid: ControllerUDID
+    /// Exact signed identifier text; UUID casing is significant on the wire.
+    public let wireIdentifier: String
 
     public init(
         identifier: ControllerIdentifier,
         udid: ControllerUDID,
         longTermSecretKey: Ed25519SecretKey,
         alternateIRK: HostAlternateIRK,
-        createdAt: Date
+        createdAt: Date,
+        wireIdentifier: String? = nil
     ) throws {
         try DateValidation.requireFinite(
             createdAt,
             field: .controllerCreatedAt
         )
+        let wireIdentifier = wireIdentifier ?? identifier.rawValue.uuidString
+        guard UUID(uuidString: wireIdentifier) == identifier.rawValue,
+              wireIdentifier.lowercased() == identifier.rawValue.uuidString.lowercased()
+        else { throw PairingPersistenceError.invalidText(.controllerUDID) }
+        self.wireIdentifier = wireIdentifier
         self.alternateIRK = alternateIRK
         self.createdAt = createdAt
         self.identifier = identifier
@@ -103,6 +111,7 @@ public struct ControllerIdentity: Codable, Equatable, Sendable {
         case identifier
         case longTermSecretKey
         case udid
+        case wireIdentifier
     }
 
     public init(from decoder: any Decoder) throws {
@@ -121,7 +130,8 @@ public struct ControllerIdentity: Codable, Equatable, Sendable {
                 HostAlternateIRK.self,
                 forKey: .alternateIRK
             ),
-            createdAt: container.decode(Date.self, forKey: .createdAt)
+            createdAt: container.decode(Date.self, forKey: .createdAt),
+            wireIdentifier: container.decodeIfPresent(String.self, forKey: .wireIdentifier)
         )
     }
 

@@ -287,6 +287,7 @@ public struct NativeControllerIdentity:
 {
     public let alternateIRK: Data
     public let identifier: UUID
+    public let wireIdentifier: String
     public let longTermSecretKey: Data
     public let udid: String
 
@@ -294,7 +295,8 @@ public struct NativeControllerIdentity:
         identifier: UUID,
         udid: String,
         longTermSecretKey: Data,
-        alternateIRK: Data
+        alternateIRK: Data,
+        wireIdentifier: String? = nil
     ) throws {
         guard
             longTermSecretKey.count == 32,
@@ -308,6 +310,11 @@ public struct NativeControllerIdentity:
             udid,
             maximumUTF8Length: 256
         )
+        let wireIdentifier = wireIdentifier ?? identifier.uuidString
+        guard UUID(uuidString: wireIdentifier) == identifier,
+              wireIdentifier.lowercased() == identifier.uuidString.lowercased()
+        else { throw NativeSessionContractError.invalidKeyMaterial }
+        self.wireIdentifier = wireIdentifier
         self.alternateIRK = alternateIRK
         self.identifier = identifier
         self.longTermSecretKey = longTermSecretKey

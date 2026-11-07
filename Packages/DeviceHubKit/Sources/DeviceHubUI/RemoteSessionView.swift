@@ -13,6 +13,7 @@ struct RemoteSessionView: View {
     let aboutButtonTapped: () -> Void
     let detailsButtonTapped: () -> Void
     let pairButtonTapped: () -> Void
+    var importPairingRequested: (() -> Void)? = nil
 
     var body: some View {
         sessionArrangement
@@ -130,7 +131,8 @@ struct RemoteSessionView: View {
             reconnectButtonTapped: reconnectButtonTapped,
             rotateButtonTapped: rotateButtonTapped,
             startViewingButtonTapped: startViewingButtonTapped,
-            stopViewingButtonTapped: stopViewingButtonTapped
+            stopViewingButtonTapped: stopViewingButtonTapped,
+            importPairingRequested: importPairingRequested
         )
     }
 

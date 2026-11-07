@@ -46,6 +46,38 @@ public actor KeychainPairingStore {
         try readVault()?.targets ?? []
     }
 
+    /// Imports one complete relationship atomically. A different controller
+    /// may replace only an unused identity; established pairings are preserved.
+    public func importRemotePairing(_ imported: RemotePairingImport) throws {
+        let existing = try readVault()
+        var vault: PairingVault
+        if let existing, !existing.targets.isEmpty {
+            guard existing.controller.identifier == imported.controller.identifier,
+                  existing.controller.wireIdentifier == imported.controller.wireIdentifier,
+                  existing.controller.udid == imported.controller.udid,
+                  existing.controller.longTermSecretKey == imported.controller.longTermSecretKey,
+                  existing.controller.alternateIRK == imported.controller.alternateIRK
+            else { throw RemotePairingImportError.existingPairings }
+            vault = existing
+        } else {
+            vault = PairingVault(controller: imported.controller)
+        }
+        guard !vault.targets.contains(where: { $0.deviceID == imported.target.deviceID }) else {
+            throw RemotePairingImportError.targetAlreadyExists
+        }
+        guard vault.targets.count < PairingVault.maximumTargetCount else {
+            throw PairingPersistenceError.tooManyTargets(maximum: PairingVault.maximumTargetCount)
+        }
+        vault.targets.append(imported.target)
+        vault.canonicalize()
+        if existing != nil {
+            try persistMutation(vault)
+        } else {
+            try driver.add(PairingVaultCodec.encode(vault), for: descriptor)
+            cachedVault = vault
+        }
+    }
+
     /// Maps durable milestones to explicit reconnect work after launch.
     public func recoveryDecisions() throws
         -> [PairingRecoveryDecision]

@@ -536,7 +536,8 @@ func nativeController(
         longTermSecretKey: identity.longTermSecretKey
             .withUnsafeBytes { Data($0) },
         alternateIRK: identity.alternateIRK
-            .withUnsafeBytes { Data($0) }
+            .withUnsafeBytes { Data($0) },
+        wireIdentifier: identity.wireIdentifier
     )
 }
 

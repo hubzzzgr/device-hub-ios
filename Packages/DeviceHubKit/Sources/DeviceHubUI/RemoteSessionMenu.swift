@@ -18,6 +18,7 @@ struct RemoteSessionMenu: View {
     let rotateButtonTapped: () -> Void
     let startViewingButtonTapped: () -> Void
     let stopViewingButtonTapped: () -> Void
+    var importPairingRequested: (() -> Void)? = nil
 
     var body: some View {
         menu
@@ -65,6 +66,10 @@ struct RemoteSessionMenu: View {
                 }
 
                 Button("Pair Nearby Device", systemImage: "plus", action: pairButtonTapped)
+                if let importPairingRequested {
+                    Button("Import Pairing File", systemImage: "square.and.arrow.down", action: importPairingRequested)
+                        .disabled(hasActiveSession)
+                }
             }
 
             Section("Device Hub") {

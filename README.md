@@ -121,6 +121,31 @@ Python's default certificate store does not include Mini's macOS LAN trust.
 `PROFILE_UUID` can reuse an existing Device Hub profile after its bundle,
 team, certificate, expiry, and device coverage have been verified.
 
+## Import an existing remote pairing
+
+Open **More Controls → Import Pairing File**, choose an XML or binary plist,
+then select **Import Pairing**. Close and reopen Device Hub after a successful
+import. Imported credentials stay in the device-only Keychain; the app does
+not retain the original file. Import is unavailable during a remote session.
+
+The importer accepts complete remote pairing records with these keys:
+
+- `host_identifier`: the exact UUID string registered with the target
+- `private_key`, `public_key`: matching 32-byte Ed25519 controller keys (`data`)
+- `host_alt_irk`: the controller's 16-byte identity-resolution key (`data`)
+- `peer_identifier`: the target's signed pairing/account identifier
+- `peer_udid`, `peer_model`: the target UDID and product type
+- `peer_public_key`: the target's 32-byte Ed25519 verification key (`data`)
+- `peer_alt_irk`: the target's 16-byte identity-resolution key (`data`)
+- Optional `host_udid` and `peer_name` strings
+
+A controller-only plist, an ordinary USB/lockdown pairing file, or a record
+missing the target verification key cannot be imported. Some tools' default
+remote pairing exports omit these fields. The importer reports missing keys
+without changing saved state. It never replaces established pairings with a
+different controller identity. Imported targets must pass authenticated
+pair-verify before being promoted to a ready pairing.
+
 ## Project structure
 
 ```text

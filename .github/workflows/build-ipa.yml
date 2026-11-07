@@ -39,6 +39,12 @@ jobs:
       - name: Install build tools
         run: mise install python rust ripgrep xcodegen
 
+      - name: Test build support
+        run: mise run test:support
+
+      - name: Test Swift packages
+        run: mise run test:swift
+
       - name: Build protocol framework
         run: mise run protocol:build
 

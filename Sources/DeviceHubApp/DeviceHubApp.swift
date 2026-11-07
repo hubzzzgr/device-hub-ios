@@ -304,6 +304,8 @@ struct DeviceHubLiveContentView: View {
     @State private var remoteDiagnostics:
         DeviceHubRemoteDiagnosticsSettings
 
+    @State private var isPairingImportPresented = false
+
     let store: StoreOf<RemoteSessionFeature>
     let diagnostics: DeviceHubDiagnosticsRuntime?
 
@@ -329,8 +331,15 @@ struct DeviceHubLiveContentView: View {
     var body: some View {
         DeviceHubView(
             store: store,
-            remoteDiagnostics: remoteDiagnostics
+            remoteDiagnostics: remoteDiagnostics,
+            importPairingRequested: {
+                guard store.session == nil, store.pairing == nil else { return }
+                isPairingImportPresented = true
+            }
         )
+        .sheet(isPresented: $isPairingImportPresented) {
+            DeviceHubPairingImportView()
+        }
         .task(id: scenePhase) {
             guard let diagnostics else { return }
             switch scenePhase {

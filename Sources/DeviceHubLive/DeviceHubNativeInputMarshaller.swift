@@ -186,7 +186,7 @@ enum DeviceHubNativeInputMarshaller {
         var value = DhControllerIdentity()
         value.struct_size = UInt32(MemoryLayout<DhControllerIdentity>.size)
         value.abi_version = DeviceHubNativeABI.expectedVersion
-        value.identifier = arena.bytes(controller.identifier.uuidString)
+        value.identifier = arena.bytes(controller.wireIdentifier)
         value.udid = arena.bytes(controller.udid)
         value.long_term_secret_key = arena.bytes(
             controller.longTermSecretKey
